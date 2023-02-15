@@ -1,0 +1,91 @@
+# Configuration for object detection node
+/object_det:
+  ros__parameters:
+    # print debug output
+    debug: true
+    # rotate images?
+    rotation: 0
+    # image source topic
+    topic: "/background/color_small_640"
+    image_size: 640
+    print_detections: false
+    print_fps: true
+    det_topic: "/object_det/objects"
+    fps_topic: "/object_det/fps"
+    power_topic: "/object_det/hailo8/avg_power"
+    max_fps: 30.0
+    # Use sensor data Quality of Service for messages
+    qos_sensor_data: true
+    # Message queue size
+    qos_history_depth: 5
+
+    ### --------------- ###
+    # YOLO STUFF
+    #(Valid DLA-Cores: 0 or 1) -1 disables the usage of DLAs
+    DLA_CORE: -1
+    # Use 16-Bit floating point units (this is automatically enabled when DLAs are used)
+    USE_FP16: true
+    ONNX_FILE: "/opt/dev/DL_Models/yolo_object/model/yolov4-416.onnx"
+    CONFIG_FILE: "/opt/dev/DL_Models/yolo_object/model/yolov4-416.cfg"
+    # If the engine file is not present the engine is build
+    ENGINE_FILE: "/opt/dev/engines/yolov4-416_dla0.engine"
+    CLASS_FILE: "/opt/dev/DL_Models/yolo_object/model/coco.names"
+    DETECT_STR: "DETECTED_OBJECTS"
+    AMOUNT_STR: "DETECTED_OBJECTS_AMOUNT"
+    FPS_STR: "OBJECT_DET_FPS"
+    # Valid Versions are 3 and 4
+    YOLO_VERSION: 4
+    #Valid values are:
+    # true  - Tiny
+    # false - Normal
+    YOLO_TINY: false
+    YOLO_THRESHOLD: 0.25
+
+
+
+# Configuration for gesture detection node
+/gesture_det:
+  ros__parameters:
+    # print debug output
+    debug: true
+    # rotate images?
+    rotation: 0    
+    # image source topic
+    topic: "/background/color_small_full_608"
+    image_size: 608
+    print_detections: false
+    print_fps: true
+    det_topic: "/gesture_det/gestures"
+    fps_topic: "/gesture_det/fps"
+    power_topic: "/gesture_det/avg_power"
+    max_fps: 30.0
+    # Use sensor data Quality of Service for messages
+    qos_sensor_data: true
+    # Message queue size
+    qos_history_depth: 5
+
+    ### --------------- ###
+    # YOLO STUFF
+      #(Valid DLA-Cores: 0 or 1) -1 disables the usage of DLAs
+    DLA_CORE: -1
+    # Use 16-Bit floating point units (this is automatically enabled when DLAs are used)
+    USE_FP16: true
+    ONNX_FILE: "/opt/dev/DL_Models/yolo_hand/model/yolov4-tiny-3l-2-608.onnx"
+    CONFIG_FILE: "/opt/dev/DL_Models/yolo_hand/model/yolov4-tiny-3l-2-608.cfg"
+    # If the engine file is not present the engine is build
+    ENGINE_FILE: "/opt/dev/engines/yolov4-tiny-3l-2-608-dla1.engine"
+    CLASS_FILE: "/opt/dev/DL_Models/yolo_hand/model/hand.names"
+
+    DETECT_STR: "DETECTED_GESTURES"
+    AMOUNT_STR: "DETECTED_GESTURES_AMOUNT"
+    FPS_STR: "GESTURE_DET_FPS"
+    # Valid Versions are 3 and 4
+    YOLO_VERSION: 4
+    #Valid values are:
+    # true  - Tiny
+    # false - Normal
+    YOLO_TINY: true
+
+    YOLO_THRESHOLD: 0.25
+
+    
