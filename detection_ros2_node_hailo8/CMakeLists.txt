@@ -15,13 +15,12 @@ set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS TRUE)
 #############
 ## Project ##
 #############
-project(detection_ros2_node_hailo8 C CXX CUDA)
+project(detection_ros2_node_hailo8 C CXX)
 set(PROJECT_BINARY ${PROJECT_NAME})
 set(PROJECT_LIBRARY ${PROJECT_NAME}_lib)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(TENSORRT PATHS cmake/modules REQUIRED)
 find_package(HailoRT 4.12.0 EXACT REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.c)
@@ -33,10 +32,7 @@ file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_
 file(GLOB src_hailo "include/3rdParty/Hailo/src/*.cpp")
 
 include_directories(SYSTEM
-	${TENSORRT_INCLUDE_DIRS}
-	${CUDAToolkit_INCLUDE_DIRS}
 	include/3rdParty/inipp
-	include/3rdParty/nvidia
 	include/3rdParty/Hailo/inc
 )
 
@@ -68,10 +64,9 @@ set_target_properties(${PROJECT_BINARY}
 		CXX_EXTENSIONS YES
 )
 
-
 # Filesystem
-target_link_libraries(${PROJECT_BINARY} stdc++fs ${TENSORRT_LIBRARIES} ${CUDAToolkit_LIBRARY_DIR}/libcudart.so HailoRT::libhailort)
-target_link_libraries(${PROJECT_LIBRARY} stdc++fs ${TENSORRT_LIBRARIES} ${CUDAToolkit_LIBRARY_DIR}/libcudart.so HailoRT::libhailort)
+target_link_libraries(${PROJECT_BINARY} stdc++fs HailoRT::libhailort)
+target_link_libraries(${PROJECT_LIBRARY} stdc++fs HailoRT::libhailort)
 
 ##################
 ## Dependencies ##
