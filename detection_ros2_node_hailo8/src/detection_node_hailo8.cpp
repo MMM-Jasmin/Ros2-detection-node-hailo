@@ -113,7 +113,7 @@ void DetectionNodeHailo8::init() {
 	std::cout << "-- init hailo8 --" << std::endl;
 
 
-	m_pYoloHailo8 = new YoloHailo(YOLOV7_HEF_FILE, CLASS_FILE, image_size, image_size, YOLO_THRESHOLD);
+	m_pYoloHailo8 = new YoloHailo(YOLOV7_HEF_FILE, CLASS_FILE, YOLO_THRESHOLD);
 	m_pYoloHailo8->StartPowerMeasuring();
 
 	m_pSortTrackers = new SORT[m_pYoloHailo8->GetClassCount()];
@@ -181,13 +181,13 @@ void DetectionNodeHailo8::ProcessDetections( )
 
 	std::map<uint32_t, TrackingObjects> trackingDets;
 
-	for (const HailoDetectionPtr& res : m_yoloHailoResults)
+	for (const YoloHailo::YoloResult& res : m_yoloHailoResults)
 	{
-		uint32_t id  = res->get_class_id() - 1;
-		float x      = res->get_bbox().xmin();
-		float y      = res->get_bbox().ymin();
-		float width  = res->get_bbox().xmax() - res->get_bbox().xmin();
-		float height = res->get_bbox().ymax() - res->get_bbox().ymin();
+		uint32_t id  = res.classID - 1;
+		float x      = res.x;
+		float y      = res.y;
+		float width  = res.w;
+		float height = res.h;
 
 		if (x < 0.0f) x = 0.0f;
 		if (y < 0.0f) y = 0.0f;
@@ -195,7 +195,7 @@ void DetectionNodeHailo8::ProcessDetections( )
 		if (height > 1.0f) height = 1.0f;
 
 		trackingDets.try_emplace(id, TrackingObjects());
-		trackingDets[id].push_back({ { x ,y , width, height }, static_cast<uint32_t>(std::round(res->get_confidence() * 100)), res->get_label()});
+		trackingDets[id].push_back({ { x ,y , width, height }, static_cast<uint32_t>(std::round(res.classProb * 100)), res.label});
 	}
 
 	TrackingObjects trackers;

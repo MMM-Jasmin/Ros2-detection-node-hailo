@@ -6,7 +6,7 @@
     # rotate images?
     rotation: 0
     # image source topic
-    topic: "/background/color_small_640"
+    topic: "/background/color_small_full_640_kar"
     image_size: 640
     print_detections: false
     print_fps: true

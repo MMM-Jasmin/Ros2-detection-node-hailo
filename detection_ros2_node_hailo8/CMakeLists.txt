@@ -21,7 +21,7 @@ set(PROJECT_LIBRARY ${PROJECT_NAME}_lib)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(HailoRT 4.12.0 EXACT REQUIRED)
+add_subdirectory(include/3rdParty/hailo8_yolo_interface)
 
 file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.c)
 #file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}/*.hpp ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}/*.h ${PROJECT_SOURCE_DIR}/include/ )
@@ -29,16 +29,15 @@ file(GLOB_RECURSE SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_
 #message(STATUS "SOURCE_FILES:\t" ${SOURCE_FILES})
 #message(STATUS "HEADER_FILES:\t" ${HEADER_FILES})
 
-file(GLOB src_hailo "include/3rdParty/Hailo/src/*.cpp")
 
 include_directories(SYSTEM
 	include/3rdParty/inipp
-	include/3rdParty/Hailo/inc
+	${hailo_intf_inc}
 )
 
 include_directories(include/${PROJECT_NAME})
 
-add_executable(${PROJECT_BINARY} ${SOURCE_FILES} ${HEADER_FILES} ${src_hailo})
+add_executable(${PROJECT_BINARY} ${SOURCE_FILES} ${HEADER_FILES} ${hailo_intf_src})
 add_library(${PROJECT_LIBRARY} ${SOURCE_FILES} ${HEADER_FILES})
 
 ##############
@@ -65,8 +64,8 @@ set_target_properties(${PROJECT_BINARY}
 )
 
 # Filesystem
-target_link_libraries(${PROJECT_BINARY} stdc++fs HailoRT::libhailort)
-target_link_libraries(${PROJECT_LIBRARY} stdc++fs HailoRT::libhailort)
+target_link_libraries(${PROJECT_BINARY} ${hailo_intf_libs})
+target_link_libraries(${PROJECT_LIBRARY} ${hailo_intf_libs})
 
 ##################
 ## Dependencies ##

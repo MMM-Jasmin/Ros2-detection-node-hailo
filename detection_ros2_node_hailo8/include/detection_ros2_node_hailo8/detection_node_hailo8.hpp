@@ -46,7 +46,7 @@ private:
 	class SORT* m_pSortTrackers;           // Pointer to n-sort trackers (n = number of classes)
 
 	class YoloHailo* m_pYoloHailo8;
-	HailoDetectionPtrs m_yoloHailoResults; 
+	YoloHailo::YoloResults m_yoloHailoResults; 
 
 	cv::Mat m_frame; // Buffer for the input frame
 
