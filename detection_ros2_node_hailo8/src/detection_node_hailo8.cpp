@@ -164,10 +164,8 @@ void DetectionNodeHailo8::imageSmallCallback(sensor_msgs::msg::Image::SharedPtr 
 
 	cv::Size image_size(static_cast<int>(img_msg->width), static_cast<int>(img_msg->height));
 	cv::Mat color_image(image_size, CV_8UC3, (void *)img_msg->data.data(), cv::Mat::AUTO_STEP);
-	
-	m_frame = color_image;
 
-	ProcessNextFrame();
+	ProcessNextFrame(color_image);
 	ProcessDetections();
 	
 	m_frameCnt++;
@@ -233,10 +231,10 @@ void DetectionNodeHailo8::ProcessDetections( )
 	m_framesSincePublish++;
 }
 
-void DetectionNodeHailo8::ProcessNextFrame()
+void DetectionNodeHailo8::ProcessNextFrame(cv::Mat &img)
 {
-	if (!m_frame.empty()){
-		m_yoloHailoResults = m_pYoloHailo8->Infer(m_frame);
+	if (!img.empty()){
+		m_yoloHailoResults = m_pYoloHailo8->Infer(img);
 	}
 } 
 

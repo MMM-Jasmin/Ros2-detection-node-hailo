@@ -48,8 +48,6 @@ private:
 	class YoloHailo* m_pYoloHailo8;
 	YoloHailo::YoloResults m_yoloHailoResults; 
 
-	cv::Mat m_frame; // Buffer for the input frame
-
 	std::string m_window_name_image_small	= "Image_small_Frame";
 
 	time_point m_callback_time = hires_clock::now();
@@ -77,7 +75,7 @@ private:
 
 	rcl_interfaces::msg::SetParametersResult parametersCallback(const std::vector<rclcpp::Parameter> &parameters);
 	void ProcessDetections();
-	void ProcessNextFrame();
+	void ProcessNextFrame(cv::Mat &img);
 	BBox toCenter(const BBox& bBox);
 	void printDetections(const TrackingObjects& trackers);
 	void CheckFPS(uint64_t* pFrameCnt);

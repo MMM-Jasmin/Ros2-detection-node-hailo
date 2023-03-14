@@ -6,7 +6,7 @@
     # rotate images?
     rotation: 0
     # image source topic
-    topic: "/background/color_small_full_640_kar_limited"
+    topic: "/background/color_small_limited"
     image_size: 640
     print_detections: false
     print_fps: true
@@ -51,7 +51,7 @@
     # rotate images?
     rotation: 0    
     # image source topic
-    topic: "/background/color_small_full_608"
+    topic: "/background/color_small_limited"
     image_size: 608
     print_detections: false
     print_fps: true
