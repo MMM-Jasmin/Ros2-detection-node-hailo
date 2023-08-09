@@ -10,7 +10,6 @@
 #include <opencv2/opencv.hpp>
 
 // PROJECT
-#include "camera_interfaces/msg/depth_frameset.hpp"
 
 #include "Types.h"
 #include "Timer.h"
