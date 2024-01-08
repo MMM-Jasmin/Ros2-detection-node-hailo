@@ -39,7 +39,7 @@
     # true  - Tiny
     # false - Normal
     YOLO_TINY: false
-    YOLO_THRESHOLD: 0.25
+    YOLO_THRESHOLD: 0.3
 
 
 
@@ -86,6 +86,6 @@
     # false - Normal
     YOLO_TINY: true
 
-    YOLO_THRESHOLD: 0.25
+    YOLO_THRESHOLD: 0.3
 
     
