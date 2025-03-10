@@ -11,9 +11,9 @@ if not ((ROS_DISTRO == "eloquent") or (ROS_DISTRO == "foxy") or (ROS_DISTRO == "
 		
 def generate_launch_description():
 	
-	package = 'detection_ros2_node'
+	package = 'detection_ros2_node_hailo8'
 	#name = 'fusion_node'
-	executable = 'detection_ros2_node'
+	executable = 'detection_ros2_node_hailo8'
 	namespace = ''
 
 	config_filename = 'config.yaml'

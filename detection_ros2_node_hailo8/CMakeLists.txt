@@ -91,6 +91,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(sm_interfaces REQUIRED)
 
 # Preprocessor define for ros2 distribution eloquent elusor
 if ($ENV{ROS_DISTRO} STREQUAL "eloquent")
@@ -116,6 +117,7 @@ ament_target_dependencies(
 	"sensor_msgs"
 	"std_msgs"
 	"ament_index_cpp"
+	"sm_interfaces"
 )
 
 # library
@@ -125,6 +127,7 @@ ament_target_dependencies(
 	"sensor_msgs"
 	"std_msgs"
 	"ament_index_cpp"
+	"sm_interfaces"
 )
 
 #############

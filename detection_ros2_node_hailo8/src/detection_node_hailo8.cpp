@@ -13,6 +13,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <string>
+#include <regex>
 
 const double ONE_SECOND            = 1000.0; // One second in milliseconds
 
@@ -21,7 +22,7 @@ const double ONE_SECOND            = 1000.0; // One second in milliseconds
  */
 DetectionNodeHailo8::DetectionNodeHailo8(const std::string &name) : Node(name, rclcpp::NodeOptions().use_intra_process_comms(false)) 
 {
-	this->declare_parameter("rotation", 0);
+
 	this->declare_parameter("debug", false);
 	this->declare_parameter("topic", "");
 	this->declare_parameter("image_size", 640);
@@ -29,24 +30,20 @@ DetectionNodeHailo8::DetectionNodeHailo8(const std::string &name) : Node(name, r
 	this->declare_parameter("print_fps", true);
 	this->declare_parameter("det_topic", "test/det");
 	this->declare_parameter("fps_topic", "test/fps");
+	this->declare_parameter("DETECT_STR", "");
+    this->declare_parameter("AMOUNT_STR", "");
+    this->declare_parameter("FPS_STR", "");
 	this->declare_parameter("power_topic", "test/watt");
 	this->declare_parameter("max_fps", 30.0f);
 	this->declare_parameter("qos_sensor_data", true);
 	this->declare_parameter("qos_history_depth", 10);
-	 
-    this->declare_parameter("DLA_CORE", 0);
-    this->declare_parameter("USE_FP16", true);
-    this->declare_parameter("ONNX_FILE", "");
-    this->declare_parameter("CONFIG_FILE", "");
-    this->declare_parameter("ENGINE_FILE" , "");
+
+	
+	this->declare_parameter("deviceID", "0001:01:00.0"); 
     this->declare_parameter("CLASS_FILE", "");
-    this->declare_parameter("DETECT_STR", "");
-    this->declare_parameter("AMOUNT_STR", "");
-    this->declare_parameter("FPS_STR", "");
-    this->declare_parameter("YOLO_VERSION", 4);
-    this->declare_parameter("YOLO_TINY", true);
     this->declare_parameter("YOLO_THRESHOLD", 0.3);	
 	this->declare_parameter("YOLOV7_HEF_FILE","/opt/dev/DL_Models/yolo_object/model/yolov7.hef");
+	this->declare_parameter("YOLO_Anchor", ""); //std::vector<std::vector<uint32_t>>
 	
 
 	callback_handle_ = this->add_on_set_parameters_callback(std::bind(&DetectionNodeHailo8::parametersCallback, this, std::placeholders::_1));
@@ -66,16 +63,39 @@ rcl_interfaces::msg::SetParametersResult DetectionNodeHailo8::parametersCallback
 	return result;
 }
 
+std::vector<std::vector<uint32_t>> parseAnchorsString(const std::string &anchors_string) {
+    std::vector<std::vector<uint32_t>> anchors;
+    std::regex outer_regex("\\{([^\\}]+)\\}");
+    std::regex inner_regex("(\\d+)");
+    std::smatch outer_match, inner_match;
+
+    std::string::const_iterator search_start(anchors_string.cbegin());
+    while (std::regex_search(search_start, anchors_string.cend(), outer_match, outer_regex)) {
+        std::vector<uint32_t> inner_vector;
+        std::string inner_string = outer_match[1].str();
+        std::string::const_iterator inner_search_start(inner_string.cbegin());
+        while (std::regex_search(inner_search_start, inner_string.cend(), inner_match, inner_regex)) {
+            inner_vector.push_back(std::stoul(inner_match[1].str()));
+            inner_search_start = inner_match.suffix().first;
+        }
+        anchors.push_back(inner_vector);
+        search_start = outer_match.suffix().first;
+    }
+
+    return anchors;
+}
+
 /**
  * @brief Initialize image node.
  */
 void DetectionNodeHailo8::init() {
 
 
-	int YOLO_VERSION, DLA_CORE, qos_history_depth, image_size;
+	int qos_history_depth, image_size;
 	bool USE_FP16, YOLO_TINY, qos_sensor_data;
 	float YOLO_THRESHOLD;
-	std::string ONNX_FILE, CONFIG_FILE, ENGINE_FILE, CLASS_FILE, YOLOV7_HEF_FILE, ros_topic, det_topic, fps_topic, power_topic;
+	std::string  DEVICEID, CLASS_FILE, YOLOV7_HEF_FILE, ros_topic, det_topic, fps_topic, power_topic, anchors_string ;
+	std::vector<std::vector<uint32_t>> anchors;
 
 	std::cout << "-- get ros config variables --" << std::endl;
 
@@ -88,23 +108,17 @@ void DetectionNodeHailo8::init() {
 	this->get_parameter("image_size", image_size);
 	
 	// get Yolo configuration
- 	this->get_parameter("DLA_CORE", DLA_CORE);
-    this->get_parameter("USE_FP16", USE_FP16);
-    this->get_parameter("ONNX_FILE", ONNX_FILE);
-    this->get_parameter("CONFIG_FILE", CONFIG_FILE);
-    this->get_parameter("ENGINE_FILE" , ENGINE_FILE);
+	this->get_parameter("deviceID", DEVICEID);
     this->get_parameter("CLASS_FILE", CLASS_FILE);
-    this->get_parameter("YOLO_VERSION", YOLO_VERSION);
-    this->get_parameter("YOLO_TINY", YOLO_TINY);
     this->get_parameter("YOLO_THRESHOLD", YOLO_THRESHOLD);
 	this->get_parameter("YOLOV7_HEF_FILE",YOLOV7_HEF_FILE);
+	this->get_parameter("YOLO_Anchor", anchors_string);
 
 	// some things needs to be member
 	this->get_parameter("max_fps", m_maxFPS);
 	this->get_parameter("DETECT_STR", m_DETECT_STR);
     this->get_parameter("AMOUNT_STR", m_AMOUNT_STR);
     this->get_parameter("FPS_STR", m_FPS_STR);
-	this->get_parameter("rotation", m_image_rotation);
 	this->get_parameter("print_detections", m_print_detections);
 	this->get_parameter("print_fps", m_print_fps);
 	this->get_parameter("qos_sensor_data", qos_sensor_data);
@@ -112,8 +126,11 @@ void DetectionNodeHailo8::init() {
 
 	std::cout << "-- init hailo8 --" << std::endl;
 
+//	const AnchorVec { { 142, 110, 192, 243, 459, 401 }, { 36, 75, 76, 55, 72, 146 }, { 12, 16, 19, 36, 40, 28 } }
 
-	m_pYoloHailo8 = new YoloHailo(YOLOV7_HEF_FILE, CLASS_FILE, YOLO_THRESHOLD);
+	anchors = parseAnchorsString(anchors_string);
+
+	m_pYoloHailo8 = new YoloHailo(YOLOV7_HEF_FILE, CLASS_FILE,DEVICEID, YOLO_THRESHOLD, anchors);
 	m_pYoloHailo8->StartPowerMeasuring();
 
 	m_pSortTrackers = new SORT[m_pYoloHailo8->GetClassCount()];
@@ -150,9 +167,10 @@ void DetectionNodeHailo8::init() {
 
 	std::cout << "-- create topics for publishing --" << std::endl;
 
-	m_detection_publisher   = this->create_publisher<std_msgs::msg::String>(det_topic, m_qos_profile_sysdef);
-	m_fps_publisher    		= this->create_publisher<std_msgs::msg::String>(fps_topic, m_qos_profile_sysdef);
-	m_power_publisher    	= this->create_publisher<std_msgs::msg::String>(power_topic, m_qos_profile_sysdef);
+	m_detection_publisher   		= this->create_publisher<std_msgs::msg::String>(det_topic, m_qos_profile_sysdef);
+	m_detectionStamped_publisher 	= this->create_publisher<sm_interfaces::msg::StringStamped>(det_topic + "Stamped", m_qos_profile_sysdef);
+	m_fps_publisher    				= this->create_publisher<std_msgs::msg::String>(fps_topic, m_qos_profile_sysdef);
+	m_power_publisher    			= this->create_publisher<std_msgs::msg::String>(power_topic, m_qos_profile_sysdef);
 
 	std::cout << "+==========[ init done ]==========+" << std::endl;
 }
@@ -269,8 +287,14 @@ void DetectionNodeHailo8::printDetections(const TrackingObjects& trackers)
 
 	auto message = std_msgs::msg::String();
 	message.data = str.str();
+
+	auto messageStamped = sm_interfaces::msg::StringStamped();
+	messageStamped.data = str.str();
+	messageStamped.header.stamp    = this->get_clock()->now();
+
 	try{
 		m_detection_publisher->publish(message);
+		m_detectionStamped_publisher->publish(messageStamped);
 	}
 	catch (...) {
 		RCLCPP_INFO(this->get_logger(), "hmm publishing dets has failed!! ");
